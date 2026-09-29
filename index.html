@@ -1,0 +1,890 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0">
+
+<title>Spanish 2 — Rapid Fire Speaking</title>
+
+<style>
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: Arial, Helvetica, sans-serif;
+  background: #f4f7fb;
+  color: #1f2937;
+}
+
+.container {
+  max-width: 760px;
+  margin: 50px auto;
+  padding: 35px;
+  background: white;
+  border-radius: 18px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.10);
+}
+
+h1 {
+  text-align: center;
+  color: #17365d;
+  margin-bottom: 10px;
+}
+
+.subtitle {
+  text-align: center;
+  color: #555;
+  margin-bottom: 30px;
+}
+
+label {
+  display: block;
+  font-weight: bold;
+  margin-top: 18px;
+  margin-bottom: 6px;
+}
+
+input {
+  width: 100%;
+  padding: 13px;
+  font-size: 16px;
+  border: 1px solid #bbb;
+  border-radius: 8px;
+}
+
+button {
+  display: block;
+  width: 100%;
+  margin-top: 25px;
+  padding: 15px;
+  font-size: 18px;
+  font-weight: bold;
+  border: none;
+  border-radius: 9px;
+  cursor: pointer;
+  background: #17365d;
+  color: white;
+}
+
+button:hover {
+  opacity: 0.9;
+}
+
+.hidden {
+  display: none;
+}
+
+#status {
+  text-align: center;
+  font-size: 22px;
+  font-weight: bold;
+  margin-top: 25px;
+}
+
+#question {
+  font-size: 28px;
+  line-height: 1.4;
+  text-align: center;
+  margin: 40px 0 25px 0;
+  color: #17365d;
+}
+
+#timer {
+  text-align: center;
+  font-size: 52px;
+  font-weight: bold;
+  margin: 25px 0;
+}
+
+#instruction {
+  text-align: center;
+  font-size: 20px;
+  color: #555;
+}
+
+.progress {
+  text-align: center;
+  font-weight: bold;
+  color: #777;
+  margin-top: 15px;
+}
+
+.error {
+  color: #a00000;
+  background: #ffeaea;
+  padding: 15px;
+  border-radius: 8px;
+  margin-top: 20px;
+}
+
+.success {
+  text-align: center;
+  font-size: 24px;
+  color: #176b35;
+  line-height: 1.5;
+}
+
+</style>
+
+</head>
+
+
+<body>
+
+
+<div class="container" id="startScreen">
+
+  <h1>Spanish 2</h1>
+
+  <div class="subtitle">
+    Rapid Fire Speaking
+  </div>
+
+  <p>
+    You will hear a question and have
+    <strong>10 seconds to think</strong>.
+  </p>
+
+  <p>
+    You will then have
+    <strong>30 seconds to answer</strong>.
+  </p>
+
+  <p>
+    Your answer will be recorded automatically.
+    You may not restart or re-record your answer.
+  </p>
+
+
+  <label for="classCode">
+    Class code
+  </label>
+
+  <input
+    id="classCode"
+    type="password"
+    autocomplete="off"
+  >
+
+
+  <label for="studentName">
+    Student name
+  </label>
+
+  <input
+    id="studentName"
+    type="text"
+    autocomplete="name"
+  >
+
+
+  <label for="studentEmail">
+    School email (optional)
+  </label>
+
+  <input
+    id="studentEmail"
+    type="email"
+    autocomplete="email"
+  >
+
+
+  <button onclick="startActivity()">
+    Start
+  </button>
+
+  <div id="startError"></div>
+
+</div>
+
+
+
+<div class="container hidden" id="activityScreen">
+
+  <div class="progress" id="progress">
+    Question 1 of 8
+  </div>
+
+  <div id="instruction">
+    Listen carefully.
+  </div>
+
+  <div id="question">
+  </div>
+
+  <div id="status">
+  </div>
+
+  <div id="timer">
+  </div>
+
+</div>
+
+
+
+<div class="container hidden" id="finishedScreen">
+
+  <div class="success">
+
+    <h1>Finished!</h1>
+
+    <p>
+      Your responses have been submitted.
+    </p>
+
+    <p>
+      You may now close this window.
+    </p>
+
+  </div>
+
+</div>
+
+
+
+<script>
+
+
+// =====================================================
+// IMPORTANT:
+// PASTE YOUR GOOGLE APPS SCRIPT WEB APP URL HERE
+// =====================================================
+
+const SERVER_URL =
+  "https://script.google.com/a/macros/presentationhs.org/s/AKfycbyigdS5l1NT0ihA3-4cC6TaDYcoffMn2FEm-3m0LeBfNMmT353i1RxGC2uZqOQJQCu7/exec";
+
+
+// =====================================================
+// QUESTIONS
+// =====================================================
+
+const QUESTIONS = [
+
+  "¿Qué haces normalmente después de las clases? Describe tu rutina.",
+
+  "¿Qué te gusta hacer cuando tienes tiempo libre? ¿Por qué?",
+
+  "¿Qué hiciste ayer después de las clases?",
+
+  "Describe una comida que te gusta. ¿Qué comes y con quién la comes normalmente?",
+
+  "¿Qué hiciste el fin de semana pasado? Menciona al menos dos cosas.",
+
+  "¿Qué vas a hacer este fin de semana?",
+
+  "Describe a una persona importante en tu vida. ¿Cómo es y qué le gusta hacer?",
+
+  "Si pudieras viajar a cualquier país hispanohablante, ¿adónde irías y qué harías allí?"
+
+];
+
+
+// =====================================================
+// VARIABLES
+// =====================================================
+
+let currentQuestion = 0;
+
+let recorder = null;
+
+let audioChunks = [];
+
+let studentName = "";
+
+let studentEmail = "";
+
+let classCode = "";
+
+let submissionId = "";
+
+
+// =====================================================
+// START ACTIVITY
+// =====================================================
+
+async function startActivity() {
+
+  const codeInput =
+    document.getElementById("classCode");
+
+  const nameInput =
+    document.getElementById("studentName");
+
+  const emailInput =
+    document.getElementById("studentEmail");
+
+  const errorBox =
+    document.getElementById("startError");
+
+
+  classCode =
+    codeInput.value.trim();
+
+  studentName =
+    nameInput.value.trim();
+
+  studentEmail =
+    emailInput.value.trim();
+
+
+  errorBox.innerHTML = "";
+
+
+  if (!classCode) {
+
+    errorBox.innerHTML =
+      '<div class="error">Please enter the class code.</div>';
+
+    return;
+  }
+
+
+  if (!studentName) {
+
+    errorBox.innerHTML =
+      '<div class="error">Please enter your name.</div>';
+
+    return;
+  }
+
+
+  // Unique ID for this student's attempt
+
+  submissionId =
+    new Date().getTime().toString();
+
+
+  try {
+
+    // Ask for microphone permission
+
+    const stream =
+      await navigator.mediaDevices.getUserMedia({
+        audio: true
+      });
+
+
+    // Stop the initial permission stream
+
+    stream.getTracks().forEach(
+      track => track.stop()
+    );
+
+
+    document
+      .getElementById("startScreen")
+      .classList.add("hidden");
+
+
+    document
+      .getElementById("activityScreen")
+      .classList.remove("hidden");
+
+
+    currentQuestion = 0;
+
+    runQuestion();
+
+  }
+
+  catch (error) {
+
+    errorBox.innerHTML =
+      '<div class="error">' +
+      'Microphone access is required. ' +
+      'Please allow microphone access and try again.' +
+      '</div>';
+
+  }
+
+}
+
+
+// =====================================================
+// RUN QUESTION
+// =====================================================
+
+async function runQuestion() {
+
+  if (currentQuestion >= QUESTIONS.length) {
+
+    finishActivity();
+
+    return;
+  }
+
+
+  const questionNumber =
+    currentQuestion + 1;
+
+
+  document
+    .getElementById("progress")
+    .textContent =
+      "Question " +
+      questionNumber +
+      " of " +
+      QUESTIONS.length;
+
+
+  const questionText =
+    QUESTIONS[currentQuestion];
+
+
+  document
+    .getElementById("question")
+    .textContent =
+      questionText;
+
+
+  document
+    .getElementById("instruction")
+    .textContent =
+      "Listen carefully.";
+
+
+  document
+    .getElementById("status")
+    .textContent = "";
+
+
+  document
+    .getElementById("timer")
+    .textContent = "";
+
+
+  // Speak question
+
+  await speakQuestion(questionText);
+
+
+  // Preparation
+
+  document
+    .getElementById("instruction")
+    .textContent =
+      "Think about your answer.";
+
+
+  await countdown(10);
+
+
+  // Recording
+
+  await recordAnswer();
+
+
+  currentQuestion++;
+
+
+  setTimeout(
+    runQuestion,
+    1000
+  );
+
+}
+
+
+// =====================================================
+// TEXT TO SPEECH
+// =====================================================
+
+function speakQuestion(text) {
+
+  return new Promise(resolve => {
+
+    const utterance =
+      new SpeechSynthesisUtterance(text);
+
+    utterance.lang = "es-ES";
+
+    utterance.rate = 0.92;
+
+    utterance.pitch = 1;
+
+    utterance.onend = resolve;
+
+    utterance.onerror = resolve;
+
+    speechSynthesis.cancel();
+
+    speechSynthesis.speak(utterance);
+
+  });
+
+}
+
+
+// =====================================================
+// COUNTDOWN
+// =====================================================
+
+function countdown(seconds) {
+
+  return new Promise(resolve => {
+
+    let remaining = seconds;
+
+    document
+      .getElementById("timer")
+      .textContent =
+        remaining;
+
+
+    const interval =
+      setInterval(() => {
+
+        remaining--;
+
+        document
+          .getElementById("timer")
+          .textContent =
+            remaining;
+
+
+        if (remaining <= 0) {
+
+          clearInterval(interval);
+
+          resolve();
+
+        }
+
+      }, 1000);
+
+  });
+
+}
+
+
+// =====================================================
+// RECORD ANSWER
+// =====================================================
+
+async function recordAnswer() {
+
+  return new Promise(async resolve => {
+
+    document
+      .getElementById("instruction")
+      .textContent =
+        "Answer now!";
+
+
+    document
+      .getElementById("status")
+      .textContent =
+        "Recording";
+
+
+    audioChunks = [];
+
+
+    const stream =
+      await navigator.mediaDevices.getUserMedia({
+        audio: true
+      });
+
+
+    let options = {};
+
+
+    if (
+      MediaRecorder.isTypeSupported(
+        "audio/webm;codecs=opus"
+      )
+    ) {
+
+      options.mimeType =
+        "audio/webm;codecs=opus";
+
+    }
+
+
+    recorder =
+      new MediaRecorder(
+        stream,
+        options
+      );
+
+
+    recorder.ondataavailable =
+      event => {
+
+        if (event.data.size > 0) {
+
+          audioChunks.push(
+            event.data
+          );
+
+        }
+
+      };
+
+
+    recorder.onstop = async () => {
+
+      stream
+        .getTracks()
+        .forEach(
+          track => track.stop()
+        );
+
+
+      const audioBlob =
+        new Blob(
+          audioChunks,
+          {
+            type:
+              recorder.mimeType ||
+              "audio/webm"
+          }
+        );
+
+
+      document
+        .getElementById("status")
+        .textContent =
+          "Saving response...";
+
+
+      await uploadAudio(
+        audioBlob,
+        currentQuestion + 1
+      );
+
+
+      document
+        .getElementById("status")
+        .textContent = "";
+
+
+      resolve();
+
+    };
+
+
+    recorder.start();
+
+
+    let remaining = 30;
+
+
+    document
+      .getElementById("timer")
+      .textContent =
+        remaining;
+
+
+    const interval =
+      setInterval(() => {
+
+        remaining--;
+
+        document
+          .getElementById("timer")
+          .textContent =
+            remaining;
+
+
+        if (remaining <= 0) {
+
+          clearInterval(interval);
+
+          recorder.stop();
+
+        }
+
+      }, 1000);
+
+  });
+
+}
+
+
+// =====================================================
+// UPLOAD AUDIO
+// =====================================================
+
+function uploadAudio(
+  blob,
+  questionNumber
+) {
+
+  return new Promise(resolve => {
+
+    const reader =
+      new FileReader();
+
+
+    reader.onloadend =
+      function() {
+
+        const base64 =
+          reader.result.split(",")[1];
+
+
+        // ---------------------------------------------
+        // Create an invisible HTML form.
+        // This avoids the CORS problem with Apps Script.
+        // ---------------------------------------------
+
+        const form =
+          document.createElement("form");
+
+
+        form.method = "POST";
+
+        form.action = SERVER_URL;
+
+        form.target =
+          "hiddenUploadFrame";
+
+
+        form.style.display = "none";
+
+
+        addField(
+          form,
+          "classCode",
+          classCode
+        );
+
+
+        addField(
+          form,
+          "studentName",
+          studentName
+        );
+
+
+        addField(
+          form,
+          "studentEmail",
+          studentEmail
+        );
+
+
+        addField(
+          form,
+          "submissionId",
+          submissionId
+        );
+
+
+        addField(
+          form,
+          "questionNumber",
+          questionNumber
+        );
+
+
+        addField(
+          form,
+          "audioBase64",
+          base64
+        );
+
+
+        addField(
+          form,
+          "mimeType",
+          blob.type || "audio/webm"
+        );
+
+
+        document.body.appendChild(form);
+
+
+        form.submit();
+
+
+        setTimeout(
+          () => {
+
+            form.remove();
+
+            resolve();
+
+          },
+          2500
+        );
+
+      };
+
+
+    reader.readAsDataURL(blob);
+
+  });
+
+}
+
+
+// =====================================================
+// ADD FORM FIELD
+// =====================================================
+
+function addField(
+  form,
+  name,
+  value
+) {
+
+  const input =
+    document.createElement("input");
+
+
+  input.type = "hidden";
+
+  input.name = name;
+
+  input.value = value;
+
+
+  form.appendChild(input);
+
+}
+
+
+// =====================================================
+// FINISH
+// =====================================================
+
+function finishActivity() {
+
+  document
+    .getElementById("activityScreen")
+    .classList.add("hidden");
+
+
+  document
+    .getElementById("finishedScreen")
+    .classList.remove("hidden");
+
+}
+
+
+</script>
+
+
+<!--
+Invisible frame used for uploading recordings.
+-->
+
+<iframe
+  name="hiddenUploadFrame"
+  style="display:none;">
+</iframe>
+
+
+</body>
+
+</html>
