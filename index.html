@@ -90,11 +90,7 @@ button:hover {
 }
 
 #question {
-  font-size: 28px;
-  line-height: 1.4;
-  text-align: center;
-  margin: 40px 0 25px 0;
-  color: #17365d;
+  display: none;
 }
 
 #timer {
@@ -108,6 +104,7 @@ button:hover {
   text-align: center;
   font-size: 20px;
   color: #555;
+  margin-top: 35px;
 }
 
 .progress {
@@ -254,8 +251,7 @@ button:hover {
 
 
 // =====================================================
-// IMPORTANT:
-// PASTE YOUR GOOGLE APPS SCRIPT WEB APP URL HERE
+// GOOGLE APPS SCRIPT WEB APP URL
 // =====================================================
 
 const SERVER_URL =
@@ -264,6 +260,10 @@ const SERVER_URL =
 
 // =====================================================
 // QUESTIONS
+//
+// These are kept here only as reference.
+// The students will NOT see or hear this text.
+// The actual questions come from your audio files.
 // =====================================================
 
 const QUESTIONS = [
@@ -285,6 +285,43 @@ const QUESTIONS = [
   "Si pudieras viajar a cualquier país hispanohablante, ¿adónde irías y qué harías allí?"
 
 ];
+
+
+// =====================================================
+// QUESTION AUDIO
+//
+// These files are stored in your separate GitHub
+// repository called "audio".
+// =====================================================
+
+const QUESTION_AUDIO = [
+
+  "https://raw.githubusercontent.com/abombarelli-pres/audio/main/Pregunta%201.m4a",
+
+  "https://raw.githubusercontent.com/abombarelli-pres/audio/main/Pregunta%202.m4a",
+
+  "https://raw.githubusercontent.com/abombarelli-pres/audio/main/Pregunta%203.m4a",
+
+  "https://raw.githubusercontent.com/abombarelli-pres/audio/main/Pregunta%204.m4a",
+
+  "https://raw.githubusercontent.com/abombarelli-pres/audio/main/Pregunta%205.m4a",
+
+  "https://raw.githubusercontent.com/abombarelli-pres/audio/main/Pregunta%206.m4a",
+
+  "https://raw.githubusercontent.com/abombarelli-pres/audio/main/Pregunta%207.m4a",
+
+  "https://raw.githubusercontent.com/abombarelli-pres/audio/main/Pregunta%208.m4a"
+
+];
+
+
+// =====================================================
+// TIMING
+// =====================================================
+
+const PREPARATION_TIME = 10;
+
+const RECORDING_TIME = 30;
 
 
 // =====================================================
@@ -391,6 +428,7 @@ async function startActivity() {
 
     currentQuestion = 0;
 
+
     runQuestion();
 
   }
@@ -414,7 +452,7 @@ async function startActivity() {
 
 async function runQuestion() {
 
-  if (currentQuestion >= QUESTIONS.length) {
+  if (currentQuestion >= QUESTION_AUDIO.length) {
 
     finishActivity();
 
@@ -432,17 +470,7 @@ async function runQuestion() {
       "Question " +
       questionNumber +
       " of " +
-      QUESTIONS.length;
-
-
-  const questionText =
-    QUESTIONS[currentQuestion];
-
-
-  document
-    .getElementById("question")
-    .textContent =
-      questionText;
+      QUESTION_AUDIO.length;
 
 
   document
@@ -461,9 +489,9 @@ async function runQuestion() {
     .textContent = "";
 
 
-  // Speak question
+  // Play your recorded question
 
-  await speakQuestion(currentQuestion);
+  await playQuestionAudio(currentQuestion);
 
 
   // Preparation
@@ -474,7 +502,9 @@ async function runQuestion() {
       "Think about your answer.";
 
 
-  await countdown(10);
+  await countdown(
+    PREPARATION_TIME
+  );
 
 
   // Recording
@@ -494,37 +524,74 @@ async function runQuestion() {
 
 
 // =====================================================
-// // QUESTION AUDIO
+// PLAY QUESTION AUDIO
 // =====================================================
 
-const QUESTION_AUDIO = [
-  "https://raw.githubusercontent.com/abombarelli-pres/audio/main/Pregunta%201.m4a",
-  "https://raw.githubusercontent.com/abombarelli-pres/audio/main/Pregunta%202.m4a",
-  "https://raw.githubusercontent.com/abombarelli-pres/audio/main/Pregunta%203.m4a",
-  "https://raw.githubusercontent.com/abombarelli-pres/audio/main/Pregunta%204.m4a",
-  "https://raw.githubusercontent.com/abombarelli-pres/audio/main/Pregunta%205.m4a",
-  "https://raw.githubusercontent.com/abombarelli-pres/audio/main/Pregunta%206.m4a",
-  "https://raw.githubusercontent.com/abombarelli-pres/audio/main/Pregunta%207.m4a",
-  "https://raw.githubusercontent.com/abombarelli-pres/audio/main/Pregunta%208.m4a"
-];
-
-function speakQuestion(index) {
+function playQuestionAudio(index) {
 
   return new Promise(resolve => {
 
-    const audio = new Audio(QUESTION_AUDIO[index]);
+    const audio =
+      new Audio();
 
-    audio.onended = resolve;
 
-    audio.onerror = () => {
-      console.error("Could not play question audio:", QUESTION_AUDIO[index]);
-      resolve();
-    };
+    audio.src =
+      QUESTION_AUDIO[index];
 
-    audio.play().catch(error => {
-      console.error("Audio playback error:", error);
-      resolve();
-    });
+    audio.preload =
+      "auto";
+
+
+    audio.onended =
+      () => {
+
+        resolve();
+
+      };
+
+
+    audio.onerror =
+      () => {
+
+        console.error(
+          "Could not play question audio:",
+          QUESTION_AUDIO[index]
+        );
+
+        document
+          .getElementById("instruction")
+          .textContent =
+            "There was a problem playing the question.";
+
+        resolve();
+
+      };
+
+
+    audio.play()
+      .then(() => {
+
+        console.log(
+          "Playing question:",
+          index + 1
+        );
+
+      })
+      .catch(error => {
+
+        console.error(
+          "Audio playback error:",
+          error
+        );
+
+        document
+          .getElementById("instruction")
+          .textContent =
+            "There was a problem playing the question.";
+
+        resolve();
+
+      });
 
   });
 
@@ -541,6 +608,7 @@ function countdown(seconds) {
 
     let remaining = seconds;
 
+
     document
       .getElementById("timer")
       .textContent =
@@ -551,6 +619,7 @@ function countdown(seconds) {
       setInterval(() => {
 
         remaining--;
+
 
         document
           .getElementById("timer")
@@ -638,52 +707,54 @@ async function recordAnswer() {
       };
 
 
-    recorder.onstop = async () => {
+    recorder.onstop =
+      async () => {
 
-      stream
-        .getTracks()
-        .forEach(
-          track => track.stop()
+        stream
+          .getTracks()
+          .forEach(
+            track => track.stop()
+          );
+
+
+        const audioBlob =
+          new Blob(
+            audioChunks,
+            {
+              type:
+                recorder.mimeType ||
+                "audio/webm"
+            }
+          );
+
+
+        document
+          .getElementById("status")
+          .textContent =
+            "Saving response...";
+
+
+        await uploadAudio(
+          audioBlob,
+          currentQuestion + 1
         );
 
 
-      const audioBlob =
-        new Blob(
-          audioChunks,
-          {
-            type:
-              recorder.mimeType ||
-              "audio/webm"
-          }
-        );
+        document
+          .getElementById("status")
+          .textContent = "";
 
 
-      document
-        .getElementById("status")
-        .textContent =
-          "Saving response...";
+        resolve();
 
-
-      await uploadAudio(
-        audioBlob,
-        currentQuestion + 1
-      );
-
-
-      document
-        .getElementById("status")
-        .textContent = "";
-
-
-      resolve();
-
-    };
+      };
 
 
     recorder.start();
 
 
-    let remaining = 30;
+    let remaining =
+      RECORDING_TIME;
 
 
     document
@@ -696,6 +767,7 @@ async function recordAnswer() {
       setInterval(() => {
 
         remaining--;
+
 
         document
           .getElementById("timer")
@@ -749,15 +821,20 @@ function uploadAudio(
           document.createElement("form");
 
 
-        form.method = "POST";
+        form.method =
+          "POST";
 
-        form.action = SERVER_URL;
+
+        form.action =
+          SERVER_URL;
+
 
         form.target =
           "hiddenUploadFrame";
 
 
-        form.style.display = "none";
+        form.style.display =
+          "none";
 
 
         addField(
@@ -809,7 +886,9 @@ function uploadAudio(
         );
 
 
-        document.body.appendChild(form);
+        document
+          .body
+          .appendChild(form);
 
 
         form.submit();
@@ -850,11 +929,16 @@ function addField(
     document.createElement("input");
 
 
-  input.type = "hidden";
+  input.type =
+    "hidden";
 
-  input.name = name;
 
-  input.value = value;
+  input.name =
+    name;
+
+
+  input.value =
+    value;
 
 
   form.appendChild(input);
@@ -870,12 +954,14 @@ function finishActivity() {
 
   document
     .getElementById("activityScreen")
-    .classList.add("hidden");
+    .classList
+    .add("hidden");
 
 
   document
     .getElementById("finishedScreen")
-    .classList.remove("hidden");
+    .classList
+    .remove("hidden");
 
 }
 
